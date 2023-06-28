@@ -87,6 +87,28 @@ select * from users;
 # => NoHostAvailable:
 ```
 
+```zsh
+docker stop Node_Z
+docker exec -it Node_X nodetool status  # expect 2 DN, 1 UN
+docker exec -it Node_X cqlsh
+
+# cql
+# invalid case
+cqlsh> CONSISTENCY QUORUM
+Consistency level set to QUORUM.
+cqlsh> use mykeyspace;
+cqlsh:mykeyspace> insert into users (user_id, fname, lname) values (11, 'morty', 'smith');
+NoHostAvailable:
+cqlsh:mykeyspace> select * from users;
+NoHostAvailable:
+
+# valid case
+cqlsh:mykeyspace> CONSISTENCY ONE
+Consistency level set to ONE.
+cqlsh:mykeyspace> insert into users (user_id, fname, lname) values (12, 'marlo', 'stanfield');
+cqlsh:mykeyspace> select * from users;
+```
+
 ## REF
 
 - https://university.scylladb.com/courses/scylla-essentials-overview/lessons/quick-wins-install-and-run-scylla/topic/install-and-start-scylladb/
