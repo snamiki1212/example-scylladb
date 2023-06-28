@@ -29,6 +29,64 @@ select * from users;
 -- => 2 rows
 ```
 
+## Cluster
+
+```zsh
+docker run --name Node_X -d scylladb/scylla:4.5.0 --overprovisioned 1 --smp 1
+docker run --name Node_Y -d scylladb/scylla:4.5.0 --seeds="$(docker inspect --format='{{ .NetworkSettings.IPAddress }}' Node_X)" --overprovisioned 1 --smp 1
+docker run --name Node_Z -d scylladb/scylla:4.5.0 --seeds="$(docker inspect --format='{{ .NetworkSettings.IPAddress }}' Node_X)" --overprovisioned 1 --smp 1
+
+# wait about 1 min
+docker exec -it Node_Z nodetool status
+# => expect to be all UN
+
+docker exec -it Node_Z cqlsh
+```
+
+```cql
+-- Seet RF=3
+CREATE KEYSPACE mykeyspace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'replication_factor' : 3};
+use mykeyspace;
+CREATE TABLE users ( user_id int, fname text, lname text, PRIMARY KEY((user_id)));
+insert into users(user_id, fname, lname) values (1, 'rick', 'sanchez');
+insert into users(user_id, fname, lname) values (4, 'rust', 'cohle');
+select * from users;
+```
+
+```cql
+-- Change CL
+CONSISTENCY QUORUM
+insert into users (user_id, fname, lname) values (7, 'eric', 'cartman');
+select * from users;
+
+-- Change CL
+CONSISTENCY ALL
+insert into users (user_id, fname, lname) values (8, 'lorne', 'malvo');
+select * from users;
+```
+
+```zsh
+# stop Node-Y
+docker stop Node_Y
+
+# Enter Node-Z with CQL
+docker exec -it Node_Z cqlsh
+
+# cql
+# Valid Case
+CONSISTENCY QUORUM
+use mykeyspace;
+insert into users (user_id, fname, lname) values (9, 'avon', 'barksdale');   # => success insert
+select * from users;
+
+# Invalid Case
+CONSISTENCY ALL
+insert into users (user_id, fname, lname) values (10, 'vm', 'varga');
+# => NoHostAvailable:
+select * from users;
+# => NoHostAvailable:
+```
+
 ## REF
 
 - https://university.scylladb.com/courses/scylla-essentials-overview/lessons/quick-wins-install-and-run-scylla/topic/install-and-start-scylladb/
