@@ -155,9 +155,53 @@ docker exec -it scylla-node1 nodetool status # check all UN status or wait/retry
 docker exec -it scylla-node2 nodetool status
 docker exec -it scylla-node2 cqlsh
 
+# CQL
 CREATE KEYSPACE scyllaU WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', 'DC1' : 3, 'DC2' : 2};
 Use scyllaU;
 DESCRIBE KEYSPACE
+```
+
+```zsh
+# CQL
+consistency EACH_QUORUM;
+
+CREATE TABLE users ( user_id int, fname text, lname text, PRIMARY KEY((user_id)));
+insert into users(user_id, fname, lname) values (1, 'rick', 'sanchez');
+insert into users(user_id, fname, lname) values (4, 'rust', 'cohle');
+# => Success
+```
+
+```zsh
+docker-compose -f docker-compose-dc2.yml pause
+docker exec -it scylla-node2 nodetool status # 3 DN in DC2
+
+# CQL
+insert into users(user_id, fname, lname) values (8, 'lorne', 'malvo');
+# => NoHostAvailable:
+```
+
+```zsh
+docker-compose -f docker-compose-dc2.yml unpause
+sleep 60; say ok; # wait 1m
+docker exec -it scylla-node2 nodetool status # check if all UN
+# CQL
+insert into users(user_id, fname, lname) values (8, 'lorne', 'malvo'); # Success
+```
+
+```zsh
+# CQL
+select * from users; # InvalidRequest:...
+consistency LOCAL_QUORUM;
+select * from users;
+```
+
+## Token
+
+```zsh
+# Show Token info
+docker exec -it scylla-node1 nodetool ring
+# or
+docker exec -it scylla-node1 nodetool describering scyllau
 ```
 
 ## Tools
