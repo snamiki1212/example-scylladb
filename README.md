@@ -132,6 +132,13 @@ insert into users(user_id, fname, lname) values (4, 'rust', 'cohle');
 select * from users;
 ```
 
+## Shard
+
+```zsh
+docker exec -it scylla-node3 bash
+./usr/lib/scylla/seastar-cpu-map.sh -n scylla # check shard
+```
+
 ## Tools
 
 - Nodetool
