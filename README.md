@@ -29,7 +29,7 @@ select * from users;
 -- => 2 rows
 ```
 
-## Cluster
+## Cluster: Case1
 
 ```zsh
 docker run --name Node_X -d scylladb/scylla:4.5.0 --overprovisioned 1 --smp 1
@@ -108,6 +108,34 @@ Consistency level set to ONE.
 cqlsh:mykeyspace> insert into users (user_id, fname, lname) values (12, 'marlo', 'stanfield');
 cqlsh:mykeyspace> select * from users;
 ```
+
+## Cluster: Case2
+
+```zsh
+docker run --name scylla-node1 -d scylladb/scylla:5.1.0
+docker run --name scylla-node2 -d scylladb/scylla:5.1.0 --seeds="$(docker inspect --format='{{ .NetworkSettings.IPAddress }}' scylla-node1)"
+docker run --name scylla-node3 -d scylladb/scylla:5.1.0 --seeds="$(docker inspect --format='{{ .NetworkSettings.IPAddress }}' scylla-node1)"
+
+# check 3 UN
+docker exec -it scylla-node3 nodetool status
+
+docker exec -it scylla-node3 cqlsh
+
+# CQL
+CREATE KEYSPACE mykeyspace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'replication_factor' : 3};
+use mykeyspace;
+DESCRIBE KEYSPACE mykeyspace;
+CREATE TABLE users ( user_id int, fname text, lname text, PRIMARY KEY((user_id)));
+
+insert into users(user_id, fname, lname) values (1, 'rick', 'sanchez');
+insert into users(user_id, fname, lname) values (4, 'rust', 'cohle');
+select * from users;
+```
+
+## Tools
+
+- Nodetool
+  - https://opensource.docs.scylladb.com/stable/operating-scylla/nodetool-commands/status
 
 ## REF
 
