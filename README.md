@@ -139,6 +139,27 @@ docker exec -it scylla-node3 bash
 ./usr/lib/scylla/seastar-cpu-map.sh -n scylla # check shard
 ```
 
+## DC
+
+```zsh
+git clone https://github.com/scylladb/scylla-code-samples.git
+cd scylla-code-samples/mms
+docker-compose up -d # wake up DC1
+sleep 60; say ok; # wait 1m
+docker-compose -f docker-compose-dc2.yml up -d # wake up DC2
+sleep 60; say ok; # wait 1m
+docker exec -it scylla-node1 nodetool status # check all UN status or wait/retry
+```
+
+```zsh
+docker exec -it scylla-node2 nodetool status
+docker exec -it scylla-node2 cqlsh
+
+CREATE KEYSPACE scyllaU WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', 'DC1' : 3, 'DC2' : 2};
+Use scyllaU;
+DESCRIBE KEYSPACE
+```
+
 ## Tools
 
 - Nodetool
