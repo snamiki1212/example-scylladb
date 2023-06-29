@@ -204,6 +204,24 @@ docker exec -it scylla-node1 nodetool ring
 docker exec -it scylla-node1 nodetool describering scyllau
 ```
 
+## Gossip
+
+```zsh
+# check
+docker exec -it scylla-node1 nodetool statusgossip
+# => running
+
+# more info
+docker exec -it scylla-node1 nodetool gossipinfo
+```
+
+## Snitch
+
+```zsh
+docker exec -it scylla-node1 nodetool describecluster
+docker exec -it  scylla-node1 cat /etc/scylla/cassandra-rackdc.properties
+```
+
 ## Tools
 
 - Nodetool
